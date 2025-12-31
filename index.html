@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Gear Train (Persistent)</title>
+<style>
+  :root {
+    --bg: #020617;
+    --panel: #020617;
+    --steel-light: #9ca3af;
+    --steel-dark: #4b5563;
+    --accent: #38bdf8;
+    --text: #e5e7eb;
+    --muted: #64748b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 0 0 4px;
+    color: var(--accent);
+    font-size: clamp(20px, 3vw, 26px);
+    letter-spacing: 0.08em;
+  }
+
+  .subtitle {
+    text-align: center;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .shell {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 16px;
+    border-radius: 16px;
+    background: radial-gradient(circle at top left,#020617,#020617 40%,#000 100%);
+    box-shadow:
+      0 0 0 1px rgba(148,163,184,0.18),
+      0 22px 54px rgba(15,23,42,0.95);
+  }
+
+  .gear-area {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 3 / 2;
+    margin: 0 auto;
+    background: radial-gradient(circle at center, #020617 0, #020617 55%, #000 100%);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .gear {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+  }
+
+  .gear svg {
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 50%;
+    filter:
+      drop-shadow(0 0 4px rgba(15,23,42,0.9))
+      drop-shadow(0 0 10px rgba(148,163,184,0.5));
+  }
+
+  /* Visual differences for gears */
+  .gear[data-index="0"] svg path { fill: #38bdf8; stroke: #7dd3fc; }
+  .gear[data-index="1"] svg path { fill: #9ca3af; stroke: #e5e7eb; }
+  .gear[data-index="2"] svg path { fill: #6b7280; stroke: #d1d5db; }
+  .gear[data-index="3"] svg path { fill: #4b5563; stroke: #9ca3af; }
+  .gear[data-index="4"] svg path { fill: #22c55e; stroke: #86efac; }
+  .gear[data-index="5"] svg path { fill: #f97316; stroke: #fed7aa; }
+  .gear[data-index="6"] svg path { fill: #a855f7; stroke: #e9d5ff; }
+  .gear[data-index="7"] svg path { fill: #0ea5e9; stroke: #7dd3fc; }
+
+  .counter {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    text-shadow: 0 1px 1px #000;
+  }
+
+  .info {
+    margin-top: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: linear-gradient(to right, rgba(15,23,42,0.96), rgba(8,47,73,0.9));
+    border: 1px solid rgba(56,189,248,0.25);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .info-item { color: var(--muted); }
+  .info-label { color: var(--accent); font-weight: 600; margin-right: 4px; }
+
+  @media (max-width: 640px) {
+    .shell { padding-inline: 10px; }
+    .gear { width: 72px; height: 72px; }
+    .counter { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<h1>Real Gear Train</h1>
+<p class="subtitle">Meshed gears, real ratios, continuous timing based on elapsed real time.</p>
+
+<div class="shell">
+  <div class="gear-area">
+    <!--
+      data-teeth: tooth count (controls ratio)
+      data-index: position in chain from the driver
+      data-x / data-y: position in pixels inside the gear area
+    -->
+    <!-- Driver gear (fast, visible) -->
+    <div class="gear" data-index="0" data-teeth="20" data-x="120" data-y="115"></div>
+
+    <!-- Linear meshed train to the right -->
+    <div class="gear" data-index="1" data-teeth="40" data-x="210" data-y="115"></div>
+    <div class="gear" data-index="2" data-teeth="10" data-x="300" data-y="115"></div>
+    <div class="gear" data-index="3" data-teeth="30" data-x="390" data-y="115"></div>
+
+    <!-- Branch from gear 2 (up and down) -->
+    <div class="gear" data-index="4" data-teeth="15" data-x="300" data-y="40"></div>
+    <div class="gear" data-index="5" data-teeth="15" data-x="300" data-y="190"></div>
+
+    <!-- Branch from gear 3 (up and down, slower) -->
+    <div class="gear" data-index="6" data-teeth="45" data-x="390" data-y="40"></div>
+    <div class="gear" data-index="7" data-teeth="45" data-x="390" data-y="190"></div>
+  </div>
+
+  <div class="info">
+    <div class="info-item">
+      <span class="info-label">Uptime:</span>
+      <span id="uptime">0s</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Last update:</span>
+      <span id="last-updated">–</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Note:</span>
+      Uses real elapsed time from a saved start in localStorage, so it acts like a clock.
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'realGearTrainStart_v1';
+
+  // Basic spur-gear SVG, styled via CSS per gear.
+  const gearSVG = `
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id="steelGrad" cx="50%" cy="50%" r="65%">
+          <stop offset="0%" stop-color="#e5e7eb"/>
+          <stop offset="35%" stop-color="#9ca3af"/>
+          <stop offset="100%" stop-color="#020617"/>
+        </radialGradient>
+      </defs>
+      <path d="M50 10 L55 15 L60 10 L65 15 L70 10 L75 15 L80 20 L85 25 L90 30 L95 35
+               L100 40 L95 45 L100 50 L95 55 L100 60 L95 65 L90 70 L85 75 L80 80 L75 85
+               L70 90 L65 95 L60 100 L55 95 L50 100 L45 95 L40 100 L35 95 L30 90 L25 85
+               L20 80 L15 75 L10 70 L5 65 L0 60 L5 55 L0 50 L5 45 L0 40 L5 35 L10 30
+               L15 25 L20 20 L25 15 L30 10 L35 15 L40 10 L45 15 Z
+               M50 30 A20 20 0 1 1 50 70 A20 20 0 1 1 50 30 Z"
+            fill="url(#steelGrad)" stroke="#9ca3af" stroke-width="1.2"/>
+    </svg>
+  `;
+
+  function getSystemStartTime() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return parseInt(saved, 10);
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY, String(now));
+      return now;
+    } catch (e) {
+      return Date.now(); // fallback if storage disabled
+    }
+  }
+
+  const systemStartTime = getSystemStartTime();
+
+  // Build gear data
+  const gearNodes = Array.from(document.querySelectorAll('.gear')).map(el => {
+    const idx = parseInt(el.dataset.index, 10);
+    const teeth = parseInt(el.dataset.teeth, 10);
+    const x = parseFloat(el.dataset.x);
+    const y = parseFloat(el.dataset.y);
+
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.innerHTML = gearSVG + '<div class="counter"></div>';
+
+    const svg = el.querySelector('svg');
+    const counterEl = el.querySelector('.counter');
+    return { el, svg, counterEl, index: idx, teeth };
+  });
+
+  // Sort by index so direction pattern is stable
+  gearNodes.sort((a, b) => a.index - b.index);
+
+  // Physics: driver gear (index 0)
+  const driver = gearNodes[0];
+  const driverTeeth = driver.teeth;
+
+  // Driver period: 12 seconds per full turn (visible but not crazy fast)
+  const driverPeriodSec = 12;
+  const driverOmegaDegPerSec = 360 / driverPeriodSec; // base angular speed
+
+  const uptimeEl = document.getElementById('uptime');
+  const lastUpdatedEl = document.getElementById('last-updated');
+
+  function fmtElapsed(sec) {
+    const s = Math.floor(sec);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h > 0) return `${h}h ${m}m ${r}s`;
+    if (m > 0) return `${m}m ${r}s`;
+    return `${r}s`;
+  }
+
+  function tick() {
+    const now = Date.now();
+    const elapsedSeconds = (now - systemStartTime) / 1000;
+
+    // Angle of driver gear (clockwise)
+    const driverAngle = elapsedSeconds * driverOmegaDegPerSec;
+
+    gearNodes.forEach((g, i) => {
+      const ratio = driverTeeth / g.teeth;     // |ω_g| = |ω_driver| * (T_driver / T_g)
+      const sign = (i % 2 === 0) ? 1 : -1;     // even index = same direction, odd = opposite
+      const angle = driverAngle * ratio * sign;
+
+      const rotations = angle / 360;
+
+      g.svg.style.transform = `rotate(${angle}deg)`;
+      g.counterEl.textContent =
+        `G${g.index + 1} (${g.teeth}T): ${rotations.toFixed(3)} rot`;
+    });
+
+    uptimeEl.textContent = fmtElapsed(elapsedSeconds);
+    lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
